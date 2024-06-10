@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDB</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+
+        .navbar-custom {
+            background-color: #000;
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #fff;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #ccc;
+        }
+
+        .dropdown-menu-right {
+            right: 0;
+            left: auto;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+
+        .btn-custom {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-custom + .btn-custom {
+            margin-top: 5px;
+        }
+
+        .float-right {
+            float: right;
+            text-align: right;
+        }
+
+        .fa-star {
+            color: rgb(0, 0, 0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom" style="padding: 10px 50px;">
+        <a class="navbar-brand" href="index.html">
+            <img src="IMDB_Logo_2016.svg.png" width="60" height="30" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="d-flex justify-content-between">
+            <h1 id="movie-title">Loading...</h1>
+            <div id="movie-info" class="float-right">
+                <h3>
+                    <i class="fas fa-star"></i>
+                    Rating: 
+                    <span id="movie-rating">Loading...</span>
+                </h3>
+                <h3>
+                    <i class="fas fa-chart-line"></i>
+                    Popularity: 
+                    <span id="movie-popularity">Loading...</span>
+                </h3>
+            </div>
+        </div>
+        <div id="movie-details" class="mt-4"></div>
+        <div id="user-interaction" class="mt-4" style="display: none;">
+            <h3 class="mt-4">Rate this Movie</h3>
+            <div class="input-group">
+                <input id="rating-input" type="number" min="1" max="10" class="form-control" style="width: 100px;">
+                <div class="input-group-append">
+                    <button id="submit-rating" class="btn btn-primary">Rate</button>
+                </div>
+            </div>
+
+            <h3 class="mt-4">Add to Watchlist</h3>
+            <button id="add-to-watchlist" class="btn btn-warning">Add to Watchlist</button>
+
+            <h3 class="mt-4">Comments</h3>
+            <div id="existing-comments"></div>
+            <div class="input-group mb-3">
+                <textarea id="comment-text" class="form-control" rows="3"></textarea>
+                <div class="input-group-append">
+                    <button id="submit-comment" class="btn btn-primary">Submit Comment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const movieId = params.get('id');
+
+            // Check user sign in status and fetch movie details
+            checkUserSignIn();
+            fetchMovieDetails(movieId);
+            fetchComments(movieId);
+
+            document.getElementById('submit-rating').addEventListener('click', function() {
+                submitRating(movieId);
+            });
+
+            document.getElementById('add-to-watchlist').addEventListener('click', function() {
+                addToWatchlist(movieId);
+            });
+
+            document.getElementById('submit-comment').addEventListener('click', function() {
+            });
+        });
+
+        function fetchMovieDetails(movieId) {
+            if (movieId) {
+                fetch(`/movie/${movieId}`)
+                    .then(response => response.json())
+                    .then(movie => {
+                        document.getElementById('movie-title').innerText = movie.title;
+                        document.getElementById('movie-rating').innerText = movie.rating;
+                        document.getElementById('movie-popularity').innerText = movie.popularity_score;
+
+                        const movieDetails = `
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img src="${movie.image_url}" class="img-fluid" alt="${movie.title}">
+                                </div>
+                                <div class="col-md-8">
+                                    <video width="840" height="472.5" controls>
+                                        <source src="${movie.trailer_url}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('movie-details').innerHTML = movieDetails;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching movie details:', error);
+                        document.getElementById('movie-title').innerText = "Error Fetching Movie Details";
+                    });
+
+                // Check if user is logged in
+                fetch('/check-session')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.isLoggedIn) {
+                            document.getElementById('user-interaction').style.display = 'block';
+                        }
+                    });
+            }
+        }
+
+        function checkUserSignIn() {
+            return fetch('/check-session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isLoggedIn) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Oturum durumu kontrol edilemedi:', error);
+                    throw error;
+                });
+        }
+
+        function submitRating(movieId) {
+            const rating = document.getElementById('rating-input').value;
+
+            checkUserSignIn().then(isLoggedIn => {
+                if (isLoggedIn) {
+                    fetch(`/rate/${movieId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ rating: rating })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Rating submitted successfully');
+                            document.getElementById('movie-rating').innerText = rating;
+                        } else {
+                            alert('Failed to submit rating');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting rating:', error);
+                        alert('An error occurred while submitting the rating');
+                    });
+                } else {
+                    alert('You need to sign in to submit a rating');
+                }
+            }).catch(error => {
+                console.error('Error checking user sign in status:', error);
+                alert('An error occurred while checking user sign in status');
+            });
+        }
+
+        function addToWatchlist(movieId) {
+            fetch(`/watchlist/${movieId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Added to watchlist successfully');
+                } else {
+                    alert('Failed to add to watchlist');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to watchlist:', error);
+                alert('An error occurred while adding to watchlist');
+            });
+        }
+
+document.getElementById('submit-comment').addEventListener('click', function() {
+    const commentText = document.getElementById('comment-text').value;
+    const params = new URLSearchParams(window.location.search);
+const movieId = params.get('id');
+
+    fetch(`/movie/${movieId}/comment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ comment: commentText })
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Comment added successfully');
+            // After adding a comment, fetch and display existing comments
+            fetchComments();
+        } else {
+            alert('Failed to add comment');
+        }
+    });
+});
+
+// Add this function call inside the fetchComments function to fetch comments only when the user is signed in
+function fetchComments() {
+    const params = new URLSearchParams(window.location.search);
+    const movieId = params.get('id');
+    if (movieId) {
+        fetch(`/movie/${movieId}/comments`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(comments => {
+                const commentsContainer = document.getElementById('existing-comments');
+                commentsContainer.innerHTML = ''; // Clear existing comments
+                comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.classList.add('card', 'mb-2');
+                    commentElement.innerHTML = `
+                        <div class="card-body">
+                            <p class="card-text">${comment.comment}</p>
+                            <p class="card-text"><small class="text-muted">${comment.username}</small></p>
+                        </div>
+                    `;
+                    commentsContainer.appendChild(commentElement);
+                });
+                // Display the comments container only if the user is signed in
+                if (comments.length > 0) {
+                    document.getElementById('existing-comments').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching comments:', error);
+            });
+    }
+}
+
+// Call fetchComments function when the page is loaded to fetch comments if the user is signed in
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+const movieId = params.get('id');
+
+    fetchComments(movieId);
+});
+
+    </script>
+</body>
+</html>

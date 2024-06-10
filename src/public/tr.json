@@ -1,0 +1,21 @@
+{
+    "menu": "Menü",
+    "all": "Hepsi",
+    "titles": "Başlıklar",
+    "tv_episodes": "TV Bölümleri",
+    "celebs": "Ünlüler",
+    "companies": "Şirketler",
+    "keywords": "Anahtar Kelimeler",
+    "search_placeholder": "Ara",
+    "watchlist": "İzleme Listesi",
+    "sign_in": "Giriş Yap",
+    "language": "Dil",
+    "english": "İngilizce",
+    "turkish": "Türkçe",
+    "top_10": "Bu hafta IMDB'de En İyi 10",
+    "rating": "Puan",
+    "view_details": "Detayları Görüntüle",
+    "watch_trailer": "Fragmanı İzle",
+    "no_results_found": "Sonuç bulunamadı",
+    "error_fetching_results": "Sonuçlar getirilirken hata oluştu"
+}

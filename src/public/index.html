@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDB</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-custom {
+            background-color: #000;
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #fff;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #ccc;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+        /* Carousel section */
+        #movie-carousel {
+            background-color: #000;
+            padding: 50px 0;
+        }
+        #movie-carousel .carousel-item {
+            padding: 0 10px;
+        }
+        #movie-carousel .movie-container {
+            text-align: center;
+            color: #fff;
+            margin: 0 5px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #movie-carousel img {
+            border-radius: 10px;
+            width: 100%;
+            max-height: 200px; /* Maximum height for the images */
+            object-fit: cover;
+        }
+        #movie-carousel .movie-details {
+            background-color: #444;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            width: 100%;
+            flex-grow: 1;
+        }
+        #movie-carousel .movie-details h5 {
+            margin: 10px 0 5px;
+        }
+        #movie-carousel .movie-details p {
+            margin: 0 0 10px;
+        }
+        .btn-custom {
+            width: 100%;
+            margin-top: 10px;
+            flex-grow: 0; /* Add this to prevent buttons from growing */
+        }
+        .btn-custom + .btn-custom {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom" style="padding: 10px 50px;">
+        <a class="navbar-brand" href="#">
+            <img src="IMDB_Logo_2016.svg.png" width="60" height="30" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar Menus -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-key="menu">
+                        Menu
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('All')" data-key="all">All</a>
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('Titles')" data-key="titles">Titles</a>
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('TV Episodes')" data-key="tv_episodes">TV Episodes</a>
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('Celebs')" data-key="celebs">Celebs</a>
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('Companies')" data-key="companies">Companies</a>
+                        <a class="dropdown-item" href="#" onclick="changeSearchCategory('Keywords')" data-key="keywords">Keywords</a>
+                    </div>
+                </li>
+            </ul>
+
+            <!-- Search Form -->
+            <form class="form-inline mx-auto d-flex justify-content-center" id="search-form">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="searchDropdown" data-key="all">All</button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('All')" data-key="all">All</a>
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('Titles')" data-key="titles">Titles</a>
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('TV Episodes')" data-key="tv_episodes">TV Episodes</a>
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('Celebs')" data-key="celebs">Celebs</a>
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('Companies')" data-key="companies">Companies</a>
+                            <a class="dropdown-item" href="#" onclick="changeSearchCategory('Keywords')" data-key="keywords">Keywords</a>
+                        </div>
+                    </div>
+                    <input class="form-control" id="search-input" type="search" placeholder="Search" aria-label="Search" oninput="showSuggestions()">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    </div>
+                    <div id="autocomplete-list" class="autocomplete-items"></div>
+                </div>
+            </form>
+
+            <!-- Right-aligned Navbar Items -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="watchlist.html" data-key="watchlist">Watchlist</a>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-link" href="signin.html" id="userDisplay" style="cursor: default;"></span>
+                </li>
+                <!-- Language Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-key="language">
+                        Language
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                        <a class="dropdown-item" href="#" onclick="setLanguage('en')" data-key="english">English</a>
+                        <a class="dropdown-item" href="#" onclick="setLanguage('tr')" data-key="turkish">Türkçe</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Movie Carousel -->
+    <div id="movie-carousel" class="container-fluid">
+        <div class="container">
+            <h2 class="text-white mb-4" data-key="top_10">Top 10 on IMDB this week</h2>
+            <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    <!-- Carousel Items Will Be Added Dynamically -->
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    let currentLanguage = 'en';
+    // main.js
+// JavaScript code for search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Search form submission
+    document.getElementById('search-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        const searchTerm = document.getElementById('search-input').value.trim();
+        const searchCategory = document.getElementById('searchDropdown').getAttribute('data-key');
+
+        if (searchTerm) {
+            window.location.href = `/search.html?q=${searchTerm}&category=${searchCategory}`;
+        } else {
+            alert('Please enter a search term'); // Or display a message in a more user-friendly way
+        }
+    });
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Sayfa yüklendiğinde kontrol edilir, kullanıcı girişi yapılmışsa kullanıcı adını gösterir
+    checkUserSignIn();
+
+    // Watchlist linkine tıklanınca işlem yapılacak
+    document.querySelector('[data-key="watchlist"]').addEventListener('click', function(event) {
+        event.preventDefault(); // Sayfa yenilenmesini engelle
+        // Kullanıcı oturumunu kontrol et
+        fetch('/check-session')
+            .then(response => response.json())
+            .then(data => {
+                if (data.isLoggedIn) {
+                    // Kullanıcı girişi yapılmışsa watchlist.html'e yönlendir
+                    window.location.href = "/watchlist.html";
+                } else {
+                    // Kullanıcı girişi yapılmamışsa signin.html'e yönlendir
+                    window.location.href = "/signin.html";
+                }
+            })
+            .catch(error => console.error('Error checking user session:', error));
+    });
+});
+
+
+function checkUserSignIn() {
+    fetch('/check-session') // Kullanıcının oturumunu kontrol etmek için sunucuya istek gönderir
+        .then(response => response.json())
+        .then(data => {
+            if (data.isLoggedIn) {
+                // Kullanıcı girişi yapılmışsa, kullanıcı adını gösteren elementi günceller
+                document.getElementById('userDisplay').textContent = data.user.name;
+            } else {
+                // Kullanıcı girişi yapılmamışsa, "Sign In" metnini gösterir
+                document.getElementById('userDisplay').textContent = "Sign In";
+                // "Sign In" metnine tıklanınca kullanıcıyı signin.html sayfasına yönlendirir
+                document.getElementById('userDisplay').addEventListener('click', function() {
+                    window.location.href = "/signin.html";
+                });
+            }
+        })
+        .catch(error => console.error('Error checking user session:', error));
+}
+
+
+    // Function to change the search category
+    function changeSearchCategory(category) {
+        currentCategory = category;
+        if (category === 'All') {
+            // If "All" is selected, reset the search dropdown text and input placeholder
+            document.getElementById('searchDropdown').innerText = 'All';
+            document.getElementById('search-input').placeholder = 'Search';
+        } else {
+            // For other categories, update dropdown text and input placeholder accordingly
+            document.getElementById('searchDropdown').innerText = category;
+            document.getElementById('search-input').placeholder = `Search ${category}`;
+        }
+        document.getElementById('autocomplete-list').innerHTML = '';
+        document.getElementById('search-input').value = '';
+    }
+
+    // Function to show suggestions
+    function showSuggestions() {
+        const inputValue = document.getElementById('search-input').value.trim();
+        const autocompleteList = document.getElementById('autocomplete-list');
+        autocompleteList.innerHTML = '';
+
+        if (!inputValue) {
+            return;
+        }
+
+        fetch(`/search?q=${inputValue}&category=${currentCategory}`)
+            .then(response => response.json())
+            .then(results => {
+                if (results && results.length > 0) {
+                    const maxResults = Math.min(results.length, 3);
+
+                    for (let i = 0; i < maxResults; i++) {
+                        const suggestion = document.createElement('div');
+                        suggestion.classList.add('autocomplete-item');
+                        if (currentCategory === 'Celebs') {
+                            suggestion.innerHTML = `<div>${results[i].actors}</div>`;
+                        } else {
+                            suggestion.innerHTML = `<div>${results[i].title}</div>`;
+                        }
+                        suggestion.addEventListener('click', () => {
+                            document.getElementById('search-input').value = (currentCategory === 'Celebs') ? results[i].actors : results[i].title;
+                            autocompleteList.innerHTML = '';
+                        });
+                        autocompleteList.appendChild(suggestion);
+                    }
+                } else {
+                    const noResults = document.createElement('div');
+                    noResults.classList.add('autocomplete-item');
+                    noResults.innerHTML = '<div data-key="no_results_found">No results found</div>';
+                    autocompleteList.appendChild(noResults);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching search results:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.classList.add('autocomplete-item');
+                errorDiv.innerHTML = '<div data-key="error_fetching_results">Error fetching results</div>';
+                autocompleteList.appendChild(errorDiv);
+            });
+    }
+
+    // Function to set the language
+    function setLanguage(language) {
+        fetch(`${language}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.querySelectorAll('[data-key]').forEach(element => {
+                    const key = element.getAttribute('data-key');
+                    if (data[key]) {
+                        element.innerText = data[key];
+                    }
+                });
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.innerText = data['view_details'];
+                });
+                document.querySelectorAll('.watch-trailer').forEach(button => {
+                    button.innerText = data['watch_trailer'];
+                });
+                currentLanguage = language;
+            })
+            .catch(error => {
+                console.error('Error fetching language file:', error);
+            });
+    }
+
+// Document ready function to fetch movies and initialize event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/movies')
+        .then(response => response.json())
+        .then(movies => {
+            const carouselInner = document.querySelector('.carousel-inner');
+            const carouselItems = [];
+            let currentItem = 0;
+
+            for (let i = 0; i < movies.length; i += 5) {
+                const carouselItem = document.createElement('div');
+                carouselItem.classList.add('carousel-item');
+                if (i === 0) {
+                    carouselItem.classList.add('active');
+                }
+                const row = document.createElement('div');
+                row.classList.add('row', 'justify-content-center');
+
+                for (let j = i; j < i + 5 && j < movies.length; j++) {
+                    const movie = movies[j];
+
+                    const col = document.createElement('div');
+                    col.classList.add('col-md-2', 'movie-container');
+
+                    const img = document.createElement('img');
+                    img.src = movie.image_url;
+                    img.alt = movie.title;
+
+                    const details = document.createElement('div');
+                    details.classList.add('movie-details');
+
+                    const title = document.createElement('h5');
+                    title.innerText = movie.title;
+
+                    const rating = document.createElement('p');
+                    rating.innerText = `Rating: ${movie.rating}`;
+
+                    const detailsButton = document.createElement('button');
+                    detailsButton.classList.add('btn', 'btn-custom', 'btn-primary', 'view-details');
+                    detailsButton.innerText = 'View Details';
+                    detailsButton.setAttribute('data-id', movie.id);
+
+                    const trailerButton = document.createElement('button');
+                    trailerButton.classList.add('btn', 'btn-custom', 'btn-primary', 'watch-trailer');
+                    trailerButton.innerText = 'Watch Trailer';
+                    trailerButton.setAttribute('data-trailer-link', movie.trailer_url);
+
+                    details.appendChild(title);
+                    details.appendChild(rating);
+                    details.appendChild(detailsButton);
+                    details.appendChild(trailerButton);
+
+                    col.appendChild(img);
+                    col.appendChild(details);
+
+                    row.appendChild(col);
+                }
+
+                carouselItem.appendChild(row);
+                carouselInner.appendChild(carouselItem);
+                carouselItems.push(carouselItem);
+            }
+
+            const carouselNext = document.querySelector('.carousel-control-next');
+            const carouselPrev = document.querySelector('.carousel-control-prev');
+
+            carouselNext.addEventListener('click', function() {
+                carouselItems[currentItem].classList.remove('active');
+                currentItem = (currentItem + 1) % carouselItems.length;
+                carouselItems[currentItem].classList.add('active');
+            });
+
+            carouselPrev.addEventListener('click', function() {
+                carouselItems[currentItem].classList.remove('active');
+                currentItem = (currentItem - 1 + carouselItems.length) % carouselItems.length;
+                carouselItems[currentItem].classList.add('active');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('view-details')) {
+                    const movieId = event.target.getAttribute('data-id');
+                    window.location.href = `/details.html?id=${movieId}`;
+                }
+            });
+
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('watch-trailer')) {
+                    const trailerLink = event.target.getAttribute('data-trailer-link');
+                    window.open(trailerLink, '_blank');
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching movies:', error));
+
+    // Initialize event listeners for language change
+    document.querySelectorAll('[data-lang]').forEach(langItem => {
+        langItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            const language = langItem.getAttribute('data-lang');
+            setLanguage(language);
+        });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar-custom {
+            background-color: #000;
+            padding: 10px 50px;
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #fff;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #ccc;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        #search-results .row {
+            margin-bottom: 20px;
+        }
+
+        #search-results .col-md-4 {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            cursor: pointer; /* Make the results clickable */
+        }
+
+        .search-result-image {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <a class="navbar-brand" href="index.html">
+            <img src="IMDB_Logo_2016.svg.png" width="60" height="30" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar Menus -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="watchlist.html" data-key="watchlist">Watchlist</a>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-link" href="signin.html" id="userDisplay" style="cursor: default;"></span>
+                </li>
+                <!-- Language Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-key="language">
+                        Language
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                        <a class="dropdown-item" href="#" onclick="setLanguage('en')" data-key="english">English</a>
+                        <a class="dropdown-item" href="#" onclick="setLanguage('tr')" data-key="turkish">Türkçe</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Search Results</h1>
+        <div id="search-results"></div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // JavaScript code for search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search form submission
+            document.getElementById('search-form').addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission behavior
+
+                const searchTerm = document.getElementById('search-input').value.trim();
+                if (searchTerm) {
+                    window.location.href = `/search.html?q=${searchTerm}`;
+                } else {
+                    alert('Please enter a search term'); // Or display a message in a more user-friendly way
+                }
+            });
+        });
+
+        // JavaScript code to fetch and display search results
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchTerm = urlParams.get('q');
+
+            if (searchTerm) {
+                fetch(`/search?q=${searchTerm}&category=All`)
+                    .then(response => response.json())
+                    .then(results => {
+                        const searchResults = document.getElementById('search-results');
+                        if (results && results.length > 0) {
+                            let html = '';
+                            for (let i = 0; i < results.length; i += 3) {
+                                html += '<div class="row">';
+                                for (let j = i; j < i + 3 && j < results.length; j++) {
+                                    const result = results[j];
+                                    html += `<div class="col-md-4" onclick="redirectToDetails('${result.id}')">`; // Updated to pass movie ID instead of title
+                                    if (result.category === 'Celebs') {
+                                        html += `<img src="${result.actor_photo}" alt="Actor Photo" class="search-result-image">`;
+                                    } else {
+                                        html += `<img src="${result.image_url}" alt="Movie Poster" class="search-result-image">`;
+                                    }
+                                    html += `<p>${result.title}</p>`;
+                                    html += '</div>';
+                                }
+                                html += '</div>';
+                            }
+                            searchResults.innerHTML = html;
+                        } else {
+                            searchResults.innerHTML = '<p>No results found</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching search results:', error);
+                        document.getElementById('search-results').innerHTML = '<p>Error fetching search results</p>';
+                    });
+            } else {
+                document.getElementById('search-results').innerHTML = '<p>No search term provided</p>';
+            }
+        });
+
+        // Function to redirect to details page
+        function redirectToDetails(id) {
+            const detailsURL = `/details.html?id=${id}`; // Pass movie ID as a query parameter
+            window.location.href = detailsURL;
+        }
+    </script>
+</body>
+</html>
+

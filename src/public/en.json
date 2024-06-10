@@ -1,0 +1,21 @@
+{
+    "menu": "Menu",
+    "all": "All",
+    "titles": "Titles",
+    "tv_episodes": "TV Episodes",
+    "celebs": "Celebs",
+    "companies": "Companies",
+    "keywords": "Keywords",
+    "search_placeholder": "Search",
+    "watchlist": "Watchlist",
+    "sign_in": "Sign In",
+    "language": "Language",
+    "english": "English",
+    "turkish": "Türkçe",
+    "top_10": "Top 10 on IMDB this week",
+    "rating": "Rating",
+    "view_details": "View Details",
+    "watch_trailer": "Watch Trailer",
+    "no_results_found": "No results found",
+    "error_fetching_results": "Error fetching results"
+}
