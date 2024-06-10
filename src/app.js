@@ -36,8 +36,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 passport.use(new GoogleStrategy({
-    clientID: '549366911753-4etshth6jptf69qk6hkc63ucji6bonhg.apps.googleusercontent.com',
-    clientSecret: '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',
+    clientID: 'my-client-id',
+    clientSecret: 'my-client-secret',
     callbackURL: '/auth/google/callback'
 }, (accessToken, refreshToken, profile, done) => {
     const { given_name: name, family_name: surname, email } = profile._json;
